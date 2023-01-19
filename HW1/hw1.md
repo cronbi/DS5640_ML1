@@ -1,16 +1,25 @@
----
-title: "Homework 1"
-author: Qi Lin
-date: "`r format(Sys.time(), '%B %d, %Y')`"
-output: github_document
----
+Homework 1
+================
+Qi Lin
+January 19, 2023
 
-```{r}
+``` r
 library('class')
 library('dplyr')
 ```
 
-```{r}
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 ## load binary classification example data from author website 
 ## 'ElemStatLearn' package no longer available
 load(url('https://web.stanford.edu/~hastie/ElemStatLearn/datasets/ESL.mixture.rda'))
@@ -35,7 +44,9 @@ plot_mix_data <- function(dat, datboot=NULL) {
 plot_mix_data(dat)
 ```
 
-```{r}
+![](hw1_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+``` r
 ## fit linear classifier
 fit_lc <- function(y, x) {
   df <- data.frame(y = y, x1 = x[,1], x2 = x[,2])
@@ -50,13 +61,13 @@ predict_lc <- function(x, fit) {
 }
 ```
 
-```{r}
+``` r
 ## fit model to mixture data and make predictions
 lc_beta <- fit_lc(dat$y, dat$x)
 lc_pred <- predict_lc(dat$xnew, lc_beta)
 ```
 
-```{r}
+``` r
 ## reshape predictions as a matrix
 lc_pred <- matrix(lc_pred, length(dat$px1), length(dat$px2))
 contour(lc_pred,
@@ -64,7 +75,9 @@ contour(lc_pred,
       ylab=expression(x[2]))
 ```
 
-```{r}
+![](hw1_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
 ## find the contours in 2D space such that lc_pred == 0.5
 lc_cont <- contourLines(dat$px1, dat$px2, lc_pred, levels=0.5)
 
@@ -73,7 +86,12 @@ plot_mix_data(dat)
 sapply(lc_cont, lines)
 ```
 
+![](hw1_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-The more flexible model decreases the bias (sum of squares). It follows the data points along the arc of the true relationship of x1 and x2. However, it increases variance of the model. It would result in vastly different sum of squares for different data.
+    ## [[1]]
+    ## NULL
 
-
+The more flexible model decreases the bias (sum of squares). It follows
+the data points along the arc of the true relationship of x1 and x2.
+However, it increases variance of the model. It would result in vastly
+different sum of squares for different data.
