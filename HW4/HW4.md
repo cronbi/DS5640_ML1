@@ -1,23 +1,27 @@
----
-title: "Homework 4"
-author: "Qi Lin"
-date: "`r format(Sys.time(), '%B %d, %Y')`"
-output: github_document
----
+Homework 4
+================
+Qi Lin
+February 25, 2023
 
-```{r, message=FALSE}
+``` r
 library('MASS') ## for 'mcycle'
 library('manipulate') ## for 'manipulate'
 ```
 
-1. Randomly split the mcycle data into training (75%) and validation (25%) subsets.
-```{r}
+1.  Randomly split the mcycle data into training (75%) and validation
+    (25%) subsets.
+
+``` r
 # data loading 
 y <- mcycle$accel
 x <- matrix(mcycle$times, length(mcycle$times), 1)
 
 plot(x, y, xlab="Time (ms)", ylab="Acceleration (g)")
+```
 
+![](HW4_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+``` r
 # reproducible
 set.seed(1)
 
@@ -33,8 +37,13 @@ train_y <- y[index]
 test_y <- y[-index]
 ```
 
-2. Using the mcycle data, consider predicting the mean acceleration as a function of time. Use the Nadaraya-Watson method with the k-NN kernel function to create a series of prediction models by varying the tuning parameter over a sequence of values. (hint: the script already implements this)
-```{r}
+2.  Using the mcycle data, consider predicting the mean acceleration as
+    a function of time. Use the Nadaraya-Watson method with the k-NN
+    kernel function to create a series of prediction models by varying
+    the tuning parameter over a sequence of values. (hint: the script
+    already implements this)
+
+``` r
 ## Epanechnikov kernel function
 ## x  - n x p matrix of training inputs
 ## x0 - 1 x p input where to make prediction
@@ -108,7 +117,11 @@ y_hat_plot_KNN <- nadaraya_watson(y, x, x_plot,
 # plot predictions
 plot(x, y, xlab="Time (ms)", ylab="Acceleration (g)")
 lines(x_plot, y_hat_plot_KNN, col="#882255", lwd=2)
+```
 
+![](HW4_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
 # how does k affect shape of predictor using k-nn kernel?
 # using a slider 
 # manipulate({
@@ -119,8 +132,11 @@ lines(x_plot, y_hat_plot_KNN, col="#882255", lwd=2)
 # }, k_slider=slider(1, 100, initial=1, step=1))
 ```
 
-3. With the squared-error loss function, compute and plot the training error, AIC, BIC, and validation error (using the validation data) as functions of the tuning parameter.
-```{r}
+3.  With the squared-error loss function, compute and plot the training
+    error, AIC, BIC, and validation error (using the validation data) as
+    functions of the tuning parameter.
+
+``` r
 ## Compute effective df using NW method
 ## y  - n x 1 vector of training outputs
 ## x  - n x p matrix of training inputs
@@ -165,7 +181,11 @@ y_hat <- nadaraya_watson(train_y, train_x, train_x,
 
 ## view kernel (smoother) matrix
 matrix_image(attr(y_hat, 'k'))
+```
 
+![](HW4_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
 ## compute effective degrees of freedom
 edf <- effective_df(train_y, train_x, kernel_epanechnikov, lambda=5)
 aic = aic(train_y, y_hat, edf)
@@ -190,13 +210,19 @@ plot(train_x, train_y, xlab="Time (ms)", ylab="Acceleration (g)")
 lines(x_plot, y_hat_plot, col="#882255", lwd=2) 
 ```
 
-* Training error = `r training_error`
-* AIC = `r aic`
-* BIC = `r bic`
-* Validation error = `r validation_error`
+![](HW4_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
-4. For each value of the tuning parameter, Perform 5-fold cross-validation using the combined training and validation data. This results in 5 estimates of test error per tuning parameter value.
-```{r , message=FALSE}
+-   Training error = 774.9515796
+-   AIC = 775.1250007
+-   BIC = 775.350025
+-   Validation error = 482.2520361
+
+4.  For each value of the tuning parameter, Perform 5-fold
+    cross-validation using the combined training and validation data.
+    This results in 5 estimates of test error per tuning parameter
+    value.
+
+``` r
 library('caret') ## 'knnreg' and 'createFolds'
 
 ## 5-fold cross-validation of knnreg model
@@ -205,7 +231,12 @@ set.seed(1985)
 accel_flds  <- createFolds(mcycle$accel, k=5)
 # print(accel_flds)
 sapply(accel_flds, length)  ## not all the same length
+```
 
+    ## Fold1 Fold2 Fold3 Fold4 Fold5 
+    ##    26    28    26    27    26
+
+``` r
 cvknnreg <- function(kNN = 10, flds=accel_flds) {
   cverr <- rep(NA, length(flds))
   for(tst_idx in 1:length(flds)) { ## for each fold
@@ -229,11 +260,27 @@ cvknnreg <- function(kNN = 10, flds=accel_flds) {
 cverrs <- sapply(1:20, cvknnreg)
 #print(cverrs) ## rows are k-folds (1:5), cols are kNN (1:20)
 (cverrs_mean <- apply(cverrs, 2, mean))
+```
+
+    ##  [1] 1148.6878  893.7742  827.4059  788.4628  752.4719  692.9640  672.6004
+    ##  [8]  671.4503  668.0925  672.2806  674.2506  670.1368  663.2182  653.3462
+    ## [15]  657.8143  670.4524  680.9193  712.7899  718.2471  756.1442
+
+``` r
 (cverrs_sd   <- apply(cverrs, 2, sd))
 ```
 
-5. Plot the CV-estimated test error (average of the five estimates from each fold) as a function of the tuning parameter. Add vertical line segments to the figure (using the segments function in R) that represent one “standard error” of the CV-estimated test error (standard deviation of the five estimates from each fold).
-```{r}
+    ##  [1] 323.9170 193.3384 270.1437 260.0876 246.1653 180.3066 200.5957 175.4164
+    ##  [9] 168.5319 175.8767 165.8335 158.5756 169.1695 177.0681 209.4268 200.8906
+    ## [17] 195.4782 207.5741 196.9763 213.5736
+
+5.  Plot the CV-estimated test error (average of the five estimates from
+    each fold) as a function of the tuning parameter. Add vertical line
+    segments to the figure (using the segments function in R) that
+    represent one “standard error” of the CV-estimated test error
+    (standard deviation of the five estimates from each fold).
+
+``` r
 ## Plot the results of 5-fold CV for kNN = 1:20
 plot(x=1:20, y=cverrs_mean, 
      ylim=range(cverrs),
@@ -246,7 +293,11 @@ points(x=best_idx, y=cverrs_mean[best_idx], pch=20)
 abline(h=cverrs_mean[best_idx] + cverrs_sd[best_idx], lty=3)
 ```
 
-6. Interpret the resulting figures and select a suitable value for the tuning parameter.
+![](HW4_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-Minimum test error occurs when k = 14, we select k = 20 because it is one standard deviation away from the minimum but with the highest k value. 
+6.  Interpret the resulting figures and select a suitable value for the
+    tuning parameter.
 
+Minimum test error occurs when k = 14, we select k = 20 because it is
+one standard deviation away from the minimum but with the highest k
+value.
