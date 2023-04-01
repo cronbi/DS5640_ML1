@@ -1,0 +1,55 @@
+---
+title: "HW5"
+output: pdf_document
+date: "2023-04-01"
+---
+
+```{r}
+# Import data set 
+train <- read.delim("vowel.train.txt", header = TRUE, sep = ",")
+train = train[-1]
+str(train)
+train$y = as.factor(train$y)
+test <- read.delim("vowel.test.txt", header = TRUE, sep = ",")
+test = test[-1]
+test$y = as.factor(test$y)
+```
+
+Fit a random forest or gradient boosted model to the “vowel.train” data using all of the 11 features using the default values of the tuning parameters.
+
+```{r, message=FALSE}
+library(randomForest)
+
+# Fit a random forest model with default parameters
+fit_rf <- randomForest(y ~ ., data = train)
+```
+
+Use 5-fold CV to tune the number of variables randomly sampled as candidates at each split if using random forest, or the ensemble size if using gradient boosting.
+
+```{r}
+library(caret)
+# Set up the training control for cross-validation
+train_control <- trainControl(method = "cv", number = 5)
+
+# Tune the number of variables randomly sampled as candidates at each split
+tune_grid <- expand.grid(mtry = 1:11)
+set.seed(123)
+fit_rf_tuned <- train(y ~ ., data = train, method = "rf",
+                      importance = TRUE, proximity=TRUE,
+                      tuneGrid = tune_grid, trControl = train_control)
+
+fit_rf_tuned$bestTune # 4 variables
+(fit_rf_tuned$finalModel)
+
+print(fit_rf_tuned)          ## summary of fit object
+plot(fit_rf_tuned)           ## plot OOB MSE as function of # of trees
+```
+
+With the tuned model, make predictions using the majority vote method, and compute the misclassification rate using the ‘vowel.test’ data.
+```{r, message=FALSE}
+# Make predictions on the test data using the tuned model
+pred_rf <- predict(fit_rf_tuned, newdata = test)
+
+# Compute the misclassification rate
+(misclassification_rate <- mean(pred_rf != test$y))
+```
